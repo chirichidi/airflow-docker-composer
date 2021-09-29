@@ -1,61 +1,53 @@
-import airflow
-from airflow.models import DAG
-from airflow.operators.dummy import DummyOperator
-from airflow.operators.python import BranchPythonOperator
+from datetime import datetime
+from datetime import timedelta
 
-args = {
-    'owner': 'chirichidi',
-    'start_date': airflow.utils.dates.days_ago(2),
+from airflow import models
+from airflow.operators import dummy
+from airflow.operators import bash
+
+from plugins.operators.sample_custom_op import SampleCustomOperator
+
+
+default_args = {
+    'owner': 'airflow',
+    'start_date': datetime.now() - timedelta(days=2),
+    'depends_on_past': False,
+    'email': [],
+    'email_in_failure': False,
+    'retries': 5,
+    'retry_delay': timedelta(minutes=2),
 }
 
-dag = DAG(
-    dag_id='test_branch',
-    default_args=args,
-    schedule_interval="@daily",
+##
+with models.DAG(
+        'dummy_dag',
+        default_args=default_args,
+        is_paused_upon_creation=True,
+        schedule_interval='0 7 * * *'
+    ) as dag:
+
+    start = dummy.DummyOperator(
+        task_id='start',
+        trigger_rule='all_success'
     )
 
-first_job = DummyOperator(
-    task_id='first_job',
-    dag=dag,
+    start2 = dummy.DummyOperator(
+        task_id='start2',
+        trigger_rule='all_success'
     )
 
-options = ['path_A', 'path_B']
-
-def which_path():
-  '''
-  return the task_id which to be executed
-  '''
-  if True:
-    task_id = 'path_A'
-  else:
-    task_id = 'path_B'
-  return task_id
-
-check_situation = BranchPythonOperator(
-    task_id='check_situation',
-    python_callable=which_path,
-    dag=dag,
+    end = dummy.DummyOperator(
+        task_id='end',
+        trigger_rule='all_success'
     )
 
-first_job >> check_situation
-
-next_job = DummyOperator(
-    task_id='next_job',
-    trigger_rule='one_success', ## 중요! default 값은 'all_success' 입니다
-    dag=dag,
+    bash_op = bash.BashOperator(
+        task_id='bashOperator',
+        bash_command='ls',
     )
 
+    hello_task = SampleCustomOperator(
+        task_id='SampleCustomOperator',
+    )
 
-for option in options:
-    t = DummyOperator(
-        task_id=option,
-        dag=dag,
-        )
-    if option == 'path_B':
-        dummy_follow = DummyOperator(
-            task_id='follow_' + option,
-            dag=dag,
-			)
-        check_situation >> t >> dummy_follow >> next_job
-    else:
-        check_situation >> t >> next_job
+    [start, start2] >> bash_op >> hello_task >> end

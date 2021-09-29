@@ -1,1 +1,3 @@
 ./logs
+airflow-worker.pid
+airflow-webserver.pid
