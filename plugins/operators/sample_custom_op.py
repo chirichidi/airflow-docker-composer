@@ -7,5 +7,8 @@ class SampleCustomOperator(BaseOperator):
         super(SampleCustomOperator, self).__init__(*args, **kwargs)
 
     def execute(self, context):
+        # import pdb
+        # pdb.set_trace()
+
         print("Hello World")
         print(context)

@@ -27,6 +27,7 @@ compose-up:
 compose-down:
 	docker-compose down --volumes --rmi all
 
+## airflow cli samples ##
 info:
 	./airflow info
 
@@ -34,9 +35,13 @@ sample-task-list:
 	./airflow tasks list dummy_dag
 
 sample-task-test:
-	./airflow tasks test dummy_dag start 2021-09-28
+	./airflow tasks test dummy_dag SampleCustomOperator 2021-09-28
+
+sample-dags-test:
+	./airflow bash -c "time python /opt/airflow/dags/dummy_dag.py"
 
 sample-dags-backfill:
 	./airflow dags backfill dummy_dag \
 		--start-date 2021-09-28 \
 		--end-date 2021-09-29
+	# if fail, then first fix bug, then execute ./airflow tasks clear -t <failed_task> --downstream dummy_dag
