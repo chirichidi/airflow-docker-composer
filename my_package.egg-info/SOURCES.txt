@@ -1,5 +1,6 @@
 README.md
 setup.py
+webserver_config.py
 my_package.egg-info/PKG-INFO
 my_package.egg-info/SOURCES.txt
 my_package.egg-info/dependency_links.txt
